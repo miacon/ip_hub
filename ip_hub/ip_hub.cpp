@@ -5,6 +5,7 @@
 #include "ip_hub.h"
 #include <winsock2.h>
 #include <ws2tcpip.h>
+#include <stdint.h>
 
 #pragma comment(lib, "Ws2_32.lib")
 
@@ -284,6 +285,8 @@ INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 		if (LOWORD(wParam) == IDOK || LOWORD(wParam) == IDCANCEL)
 		{
 			EndDialog(hDlg, LOWORD(wParam));
+			for(int i=0;i<100;i++)
+				SendMsg(hDlg, &s1, SOCK_DGRAM);
 			return (INT_PTR)TRUE;
 		}
 		break;
@@ -545,17 +548,43 @@ void SetConnection(HWND hWnd, SOCK_RECORD *sr, int protocol)
 
 void SendMsg(HWND hWnd, SOCK_RECORD *sr, int protocol)
 {
+	struct {
+		uint32_t counter;
+		uint32_t mask;
+		uint32_t charge;
+	} m1;
+	float quats[4];
 	char szBuf[80];
-	strcpy_s(szBuf, "Test string");
+	m1.counter=77;
+	m1.mask=9;
+	m1.charge=33;
+
+	quats[0]=(float)0.1;
+	quats[1]=(float)0.2;
+	quats[2]=(float)0.3;
+	quats[3]=(float)0.4;
+
+//	strcpy_s(szBuf, "Test string");
+	memcpy(&szBuf,&m1,sizeof(m1));
+	memcpy(&szBuf[sizeof(m1)],quats,sizeof(quats));
+
+	quats[0]=(float)0.4;
+	quats[1]=(float)0.3;
+	quats[2]=(float)0.2;
+	quats[3]=(float)0.1;
+
+	memcpy(&szBuf[sizeof(m1)+sizeof(quats)],quats,sizeof(quats));
 
 	// Посылаем сообщение
 	if(protocol==SOCK_STREAM)
 	{
-		send((*sr).srv_socket, szBuf, strlen(szBuf), 0);
+//		send((*sr).srv_socket, szBuf, strlen(szBuf), 0);
+		send((*sr).srv_socket, szBuf, sizeof(m1)+sizeof(quats)+sizeof(quats), 0);
 	}
 	else
 	{
-		sendto((*sr).srv_socket, szBuf, strlen(szBuf), 0,
+//		sendto((*sr).srv_socket, szBuf, strlen(szBuf), 0,
+		sendto((*sr).srv_socket, szBuf, sizeof(m1)+sizeof(quats)+sizeof(quats), 0,
 	    (PSOCKADDR)&((*sr).dest_sin), sizeof((*sr).dest_sin));
 	}
 }
