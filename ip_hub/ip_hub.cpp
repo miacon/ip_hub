@@ -579,7 +579,13 @@ void SendMsg(HWND hWnd, SOCK_RECORD *sr, int protocol)
 	if(protocol==SOCK_STREAM)
 	{
 //		send((*sr).srv_socket, szBuf, strlen(szBuf), 0);
-		send((*sr).srv_socket, szBuf, sizeof(m1)+sizeof(quats)+sizeof(quats), 0);
+		//55AA 000A 0100 0000 56B4 received from the client with 55AA 0088 0100 and 64 FFFF's followed by the checksum word
+		szBuf[1]=0x55;szBuf[0]=0xaa;
+		szBuf[3]=0x00;szBuf[2]=0x0a;
+		szBuf[5]=0x01;szBuf[4]=0x00;
+		szBuf[7]=0x00;szBuf[6]=0x00;
+		szBuf[9]=0x56;szBuf[8]=0xb4;
+		send((*sr).srv_socket, szBuf, 10, 0);
 	}
 	else
 	{
